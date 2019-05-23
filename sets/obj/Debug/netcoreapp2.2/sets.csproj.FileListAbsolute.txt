@@ -1,0 +1,11 @@
+C:\Users\newforce\workspace\csharp\sets\bin\Debug\netcoreapp2.2\sets.deps.json
+C:\Users\newforce\workspace\csharp\sets\bin\Debug\netcoreapp2.2\sets.runtimeconfig.json
+C:\Users\newforce\workspace\csharp\sets\bin\Debug\netcoreapp2.2\sets.runtimeconfig.dev.json
+C:\Users\newforce\workspace\csharp\sets\bin\Debug\netcoreapp2.2\sets.dll
+C:\Users\newforce\workspace\csharp\sets\bin\Debug\netcoreapp2.2\sets.pdb
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.csprojAssemblyReference.cache
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.csproj.CoreCompileInputs.cache
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.AssemblyInfoInputs.cache
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.AssemblyInfo.cs
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.dll
+C:\Users\newforce\workspace\csharp\sets\obj\Debug\netcoreapp2.2\sets.pdb
