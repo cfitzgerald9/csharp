@@ -1,2 +1,2 @@
 # csharp
-All of my c# exercises and challenges from NewForce.
+Each folder should contain an exercise or two from NewForce that I've worked through.
