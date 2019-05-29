@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
+using StudentExercisesMVC.Models.ViewModels;
 
 namespace StudentExercisesMVC.Controllers
 {
@@ -109,22 +110,33 @@ namespace StudentExercisesMVC.Controllers
 
         // GET: Students/Create
         public ActionResult Create()
-        { return View(); }
+        {
+            StudentCreateViewModel studentViewModel = new StudentCreateViewModel(_config.GetConnectionString("DefaultConnection"));
+            return View(studentViewModel);
+        }
 
         // POST: Students/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(StudentCreateViewModel model)
         {
-            try
+            using (SqlConnection conn = Connection)
             {
-                // TODO: Add insert logic here
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO Student
+                ( firstName, lastName, slackHandle, cohortId )
+                VALUES
+                ( @firstName, @lastName, @slackHandle, @cohortId )";
+                    cmd.Parameters.Add(new SqlParameter("@firstName", model.student.firstName));
+                    cmd.Parameters.Add(new SqlParameter("@lastName", model.student.lastName));
+                    cmd.Parameters.Add(new SqlParameter("@slackHandle", model.student.slackHandle));
+                    cmd.Parameters.Add(new SqlParameter("@cohortId", model.student.cohortId));
+                    cmd.ExecuteNonQuery();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
+                    return RedirectToAction(nameof(Index));
+                }
             }
         }
 
