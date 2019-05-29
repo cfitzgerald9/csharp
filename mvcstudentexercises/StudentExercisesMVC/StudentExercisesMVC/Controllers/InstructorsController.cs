@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
+using StudentExerciseMVC.Models.ViewModels;
 
 namespace InstructorExercisesMVC.Controllers
 {
@@ -141,7 +142,8 @@ namespace InstructorExercisesMVC.Controllers
         }
 
         // GET: Instructors/Edit/5
-        public ActionResult Edit(int id)
+        [HttpGet]
+        public async Task<ActionResult> Edit(int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -159,22 +161,25 @@ namespace InstructorExercisesMVC.Controllers
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
-                    Instructor Instructor = null;
+                    Instructor thisInstructor = null;
                     if (reader.Read())
                     {
-                        Instructor = new Instructor
+                        thisInstructor = new Instructor
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            firstName = reader.GetString(reader.GetOrdinal("firstName")),
-                            lastName = reader.GetString(reader.GetOrdinal("lastName")),
-                            slackHandle = reader.GetString(reader.GetOrdinal("slackHandle")),
-                            cohortId = reader.GetInt32(reader.GetOrdinal("cohortId"))
+                            firstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            lastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            slackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            cohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
                         };
                     }
 
-                    reader.Close();
+                    InstructorCreateViewModel viewModel = new InstructorCreateViewModel(_config.GetConnectionString("DefaultConnection"));
 
-                    return View(Instructor);
+
+                    viewModel.Instructor = thisInstructor;
+
+                    return View(viewModel);
                 }
             }
         }
