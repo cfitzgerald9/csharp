@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using StudentExercisesMVC.Models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -109,22 +110,33 @@ namespace InstructorExercisesMVC.Controllers
 
         // GET: Instructors/Create
         public ActionResult Create()
-        { return View(); }
+        {
+            InstructorCreateViewModel instructorViewModel = new InstructorCreateViewModel(_config.GetConnectionString("DefaultConnection"));
+            return View(instructorViewModel);
+        }
 
         // POST: Instructors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(InstructorCreateViewModel model)
         {
-            try
+            using (SqlConnection conn = Connection)
             {
-                // TODO: Add insert logic here
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO Instructor
+                ( firstName, lastName, slackHandle, cohortId )
+                VALUES
+                ( @firstName, @lastName, @slackHandle, @cohortId )";
+                    cmd.Parameters.Add(new SqlParameter("@firstName", model.Instructor.firstName));
+                    cmd.Parameters.Add(new SqlParameter("@lastName", model.Instructor.lastName));
+                    cmd.Parameters.Add(new SqlParameter("@slackHandle", model.Instructor.slackHandle));
+                    cmd.Parameters.Add(new SqlParameter("@cohortId", model.Instructor.cohortId));
+                    cmd.ExecuteNonQuery();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
+                    return RedirectToAction(nameof(Index));
+                }
             }
         }
 

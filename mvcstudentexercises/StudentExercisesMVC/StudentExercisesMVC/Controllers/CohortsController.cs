@@ -97,23 +97,59 @@ namespace CohortExercisesMVC.Controllers
 
 
         // GET: Cohorts/Create
-        public ActionResult Create()
-        { return View(); }
+  
+         public ActionResult Create(int id)
+        {
+            using(SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+            SELECT s.Id,
+                s.cohortName
+            FROM Cohort s 
+            WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    Cohort Cohort = null;
+                    if (reader.Read())
+                    {
+                        Cohort = new Cohort
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            cohortName = reader.GetString(reader.GetOrdinal("cohortName")),
+
+                        };
+                    }
+
+                    reader.Close();
+
+                    return View(Cohort);
+                }
+            }
+        }
 
         // POST: Cohorts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(Cohort cohort)
         {
-            try
+            using (SqlConnection conn = Connection)
             {
-                // TODO: Add insert logic here
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO Cohort
+                (cohortName)
+                VALUES
+                (@cohortName)";
+                    cmd.Parameters.Add(new SqlParameter("@cohortName", cohort.cohortName));
+                    cmd.ExecuteNonQuery();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
+                    return RedirectToAction(nameof(Index));
+                }
             }
         }
 

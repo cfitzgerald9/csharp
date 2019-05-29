@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
+using StudentExercisesMVC.Models.ViewModels;
 
 namespace ExerciseExercisesMVC.Controllers
 {
@@ -102,22 +103,31 @@ namespace ExerciseExercisesMVC.Controllers
 
         // GET: Exercises/Create
         public ActionResult Create()
-        { return View(); }
+        {
+            ExerciseCreateViewModel exerciseViewModel = new ExerciseCreateViewModel(_config.GetConnectionString("DefaultConnection"));
+            return View(exerciseViewModel);
+        }
 
         // POST: Exercises/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(ExerciseCreateViewModel model)
         {
-            try
+            using (SqlConnection conn = Connection)
             {
-                // TODO: Add insert logic here
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO Exercise
+                ( exerciseName, exerciseLanguage)
+                VALUES
+                ( @exerciseName, @exerciseLanguage)";
+                    cmd.Parameters.Add(new SqlParameter("@exerciseName", model.exercise.exerciseName));
+                    cmd.Parameters.Add(new SqlParameter("@exerciseLanguage", model.exercise.exerciseLanguage));
+                    cmd.ExecuteNonQuery();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
+                    return RedirectToAction(nameof(Index));
+                }
             }
         }
 
@@ -247,6 +257,18 @@ namespace ExerciseExercisesMVC.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
         {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"DELETE FROM StudentExercise WHERE exerciseId = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                }
+            }
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
