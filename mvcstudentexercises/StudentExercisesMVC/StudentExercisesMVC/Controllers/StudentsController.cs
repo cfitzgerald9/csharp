@@ -141,7 +141,8 @@ namespace StudentExercisesMVC.Controllers
         }
 
         // GET: Students/Edit/5
-        public ActionResult Edit(int id)
+        [HttpGet]
+        public async Task<ActionResult> Edit(int id, StudentEditViewModel model)
         {
             using (SqlConnection conn = Connection)
             {
@@ -159,22 +160,25 @@ namespace StudentExercisesMVC.Controllers
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
-                    Student student = null;
+                    Student thisStudent = null;
                     if (reader.Read())
                     {
-                        student = new Student
+                        thisStudent = new Student
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            firstName = reader.GetString(reader.GetOrdinal("firstName")),
-                            lastName = reader.GetString(reader.GetOrdinal("lastName")),
-                            slackHandle = reader.GetString(reader.GetOrdinal("slackHandle")),
-                            cohortId = reader.GetInt32(reader.GetOrdinal("cohortId"))
+                            firstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            lastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            slackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            cohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
                         };
                     }
 
-                    reader.Close();
+                    StudentEditViewModel viewModel = new StudentEditViewModel(_config.GetConnectionString("DefaultConnection"));
 
-                    return View(student);
+
+                    viewModel.Student = thisStudent;
+
+                    return View(viewModel);
                 }
             }
         }
@@ -182,7 +186,7 @@ namespace StudentExercisesMVC.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, Student student)
+        public ActionResult Edit(int id, Student Student)
         {
 
             try
@@ -198,13 +202,13 @@ namespace StudentExercisesMVC.Controllers
                                                 slackHandle = @slackHandle,
                                                 cohortId = @cohortId
                                             WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@firstName", student.firstName));
-                        cmd.Parameters.Add(new SqlParameter("@lastName", student.lastName));
-                        cmd.Parameters.Add(new SqlParameter("@slackHandle", student.slackHandle));
-                        cmd.Parameters.Add(new SqlParameter("@cohortId", student.cohortId));
+                        cmd.Parameters.Add(new SqlParameter("@firstName", Student.firstName));
+                        cmd.Parameters.Add(new SqlParameter("@lastName", Student.lastName));
+                        cmd.Parameters.Add(new SqlParameter("@slackHandle", Student.slackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@cohortId", Student.cohortId));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        student = new Student();
+                        Student = new Student();
 
                         int rowsAffected = cmd.ExecuteNonQuery();
                         if (rowsAffected > 0)

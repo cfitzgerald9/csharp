@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace StudentExerciseMVC.Models.ViewModels
+namespace StudentExercisesMVC.Models.ViewModels
 {
     public class InstructorEditViewModel
     {

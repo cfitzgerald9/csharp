@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
-using StudentExerciseMVC.Models.ViewModels;
+
 
 namespace InstructorExercisesMVC.Controllers
 {
@@ -143,7 +143,7 @@ namespace InstructorExercisesMVC.Controllers
 
         // GET: Instructors/Edit/5
         [HttpGet]
-        public async Task<ActionResult> Edit(int id)
+        public async Task<ActionResult> Edit(int id, InstructorEditViewModel model)
         {
             using (SqlConnection conn = Connection)
             {
@@ -174,7 +174,7 @@ namespace InstructorExercisesMVC.Controllers
                         };
                     }
 
-                    InstructorCreateViewModel viewModel = new InstructorCreateViewModel(_config.GetConnectionString("DefaultConnection"));
+                    InstructorEditViewModel viewModel = new InstructorEditViewModel(_config.GetConnectionString("DefaultConnection"));
 
 
                     viewModel.Instructor = thisInstructor;
