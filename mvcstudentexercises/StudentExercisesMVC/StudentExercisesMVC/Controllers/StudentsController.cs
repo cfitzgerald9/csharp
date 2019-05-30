@@ -66,9 +66,7 @@ namespace StudentExercisesMVC.Controllers
                 }
             }
         }
-
         // GET: Students/Details/5
-
         public ActionResult Details(int id)
         {
             using (SqlConnection conn = Connection)
@@ -76,38 +74,57 @@ namespace StudentExercisesMVC.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-            SELECT s.Id,
-                s.firstName,
-                s.lastName,
-                s.slackHandle,
-                s.cohortId
-            FROM Student s 
-            WHERE Id = @id";
+                    cmd.CommandText = @" SELECT s.id as 'studentId', 
+                                        s.firstName, s.lastName, s.slackHandle, 
+                                        s.cohortId, c.cohortName, e.id AS 'exerciseId', 
+                                        e.exerciseName, e.exerciseLanguage FROM studentExercise se 
+                                        JOIN Exercise e on se.exerciseId = e.id 
+                                        JOIN Student s on se.studentId = s.id 
+                                        JOIN Cohort c on s.cohortId = c.id WHERE s.id = @id";
+
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-
                     SqlDataReader reader = cmd.ExecuteReader();
-                    Student student = null;
-                    if (reader.Read())
+
+                    Student studentToDisplay = null;
+                    int counter = 0;
+
+                    while (reader.Read())
                     {
-                        student = new Student
+                        if (counter < 1)
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            firstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            lastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            slackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            cohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
+                            Student student = new Student
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("studentId")),
+                                firstName = reader.GetString(reader.GetOrdinal("firstName")),
+                                lastName = reader.GetString(reader.GetOrdinal("lastName")),
+                                slackHandle = reader.GetString(reader.GetOrdinal("slackHandle")),
+                                cohortId = reader.GetInt32(reader.GetOrdinal("cohortId")),
+                                currentCohort = new Cohort()
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("cohortId")),
+                                    cohortName = reader.GetString(reader.GetOrdinal("cohortName"))
+                                }
+                            };
+                            studentToDisplay = student;
+                            counter++;
                         };
+                        Exercise exercise = new Exercise
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("exerciseId")),
+                            exerciseName = reader.GetString(reader.GetOrdinal("exerciseName")),
+                            exerciseLanguage = reader.GetString(reader.GetOrdinal("exerciseLanguage"))
+                        };
+
+                        if (!studentToDisplay.exerciseList.Any(e => e.Id == exercise.Id))
+                        {
+                            studentToDisplay.exerciseList.Add(exercise);
+                        }
                     }
-
                     reader.Close();
-
-                    return View(student);
+                    return View(studentToDisplay);
                 }
             }
         }
-
-
         // GET: Students/Create
         public ActionResult Create()
         {
@@ -149,23 +166,18 @@ namespace StudentExercisesMVC.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-            SELECT s.Id,
-                s.firstName,
-                s.lastName,
-                s.slackHandle,
-                s.cohortId
-            FROM Student s 
-            WHERE Id = @id";
+                    cmd.CommandText = @"SELECT s.Id as 'studentId', s.firstName, s.lastName, 
+                                        s.slackHandle, s.cohortId, c.cohortName
+                                        FROM student s JOIN cohort c on s.cohortId = c.id 
+                                        WHERE s.id=@id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-
                     SqlDataReader reader = cmd.ExecuteReader();
                     Student thisStudent = null;
                     if (reader.Read())
                     {
                         thisStudent = new Student
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Id = reader.GetInt32(reader.GetOrdinal("studentId")),
                             firstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             lastName = reader.GetString(reader.GetOrdinal("LastName")),
                             slackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
@@ -173,8 +185,7 @@ namespace StudentExercisesMVC.Controllers
                         };
                     }
 
-                    StudentEditViewModel viewModel = new StudentEditViewModel(_config.GetConnectionString("DefaultConnection"));
-
+                    StudentEditViewModel viewModel = new StudentEditViewModel(_config.GetConnectionString("DefaultConnection"), id);
 
                     viewModel.Student = thisStudent;
 
@@ -186,14 +197,26 @@ namespace StudentExercisesMVC.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, Student Student)
+        public ActionResult Edit(int id, Student Student, Exercise Exercise)
         {
-
-            try
-            {
+           
                 using (SqlConnection conn = Connection)
                 {
                     conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"INSERT INTO StudentExercise
+                                            (exerciseId, studentId) 
+                                            VALUES(@exerciseId, @studentId)";
+                        cmd.Parameters.Add(new SqlParameter("@studentId", id));
+                        cmd.Parameters.Add(new SqlParameter("@exerciseId", Exercise.Id));
+                        StudentExercise studentExercise = new StudentExercise();
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                    }
+                }
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"UPDATE Student
@@ -211,6 +234,7 @@ namespace StudentExercisesMVC.Controllers
                         Student = new Student();
 
                         int rowsAffected = cmd.ExecuteNonQuery();
+
                         if (rowsAffected > 0)
                         {
                             return RedirectToAction(nameof(Index));
@@ -218,20 +242,10 @@ namespace StudentExercisesMVC.Controllers
                         throw new Exception("No rows affected");
                     }
                 }
-            }
-            catch (Exception)
-            {
-                if (!StudentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            
         }
+
+
 
         // GET: Students/Delete/5
         public ActionResult Delete(int id)
