@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
+using StudentExercisesMVC.Controllers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -21,11 +22,9 @@ namespace StudentExercisesMVC.Models.ViewModels
 
         public List<SelectListItem> Cohorts { get; set; }
 
-        public List<SelectListItem> Exercises { get; set; }
-
-        public List<StudentExercise> assignedExercises { get; set; }
-        public List<int> exerciseIds { get; set; }
-        public Student Student { get; set; }
+        public List<SelectListItem> allExercises { get; set; } = new List<SelectListItem>();
+        public List<int> selectedExercises { get; set; }
+        public Student student { get; set; }
 
 
         public StudentEditViewModel() { }
@@ -33,27 +32,12 @@ namespace StudentExercisesMVC.Models.ViewModels
         public StudentEditViewModel(string connectionString, int id)
         {
             _connectionString = connectionString;
-
-            Exercises = GetAllExercises()
-                .Select(exercise => new SelectListItem()
+            allExercises = GetAllExercises().Select(exercise => new SelectListItem()
             {
                 Text = exercise.exerciseName,
                 Value = exercise.Id.ToString()
-
             })
-            .ToList();
-            assignedExercises = GetStudentExercisesForThisStudent(id);
-
-            Exercises = GetAllExercises()
-               .Select(exercise => new SelectListItem
-               {
-                   Text = exercise.exerciseName,
-                   Value = exercise.Id.ToString(),
-                   Selected = assignedExercises.Any(e => e.exerciseId == exercise.Id) ? true : false
-               })
-               .ToList();
-
-        
+                .ToList();
 
         Cohorts = GetAllCohorts()
                 .Select(cohort => new SelectListItem()
@@ -69,15 +53,14 @@ namespace StudentExercisesMVC.Models.ViewModels
                 Value = "0"
             });
 
-            Exercises.Insert(0, new SelectListItem
+            allExercises.Insert(0, new SelectListItem
             {
                 Text = "Assign an exercise",
                 Value = "0"
             });
 
         }
-
-        protected List<Exercise> GetAllExercises()
+      public List<Exercise> GetAllExercises()
         {
             using (SqlConnection conn = Connection)
             {
@@ -104,40 +87,79 @@ namespace StudentExercisesMVC.Models.ViewModels
                 }
             }
         }
-
-        private List<StudentExercise> GetStudentExercisesForThisStudent(int id)
+        public Student GetOneStudent(int id)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $"SELECT Id, studentId, exerciseId " +
-                                      $"FROM StudentExercise WHERE StudentId = {id}";
+                    cmd.CommandText = @"
+                        SELECT
+                            s.Id AS 'Student Id', s.firstName, s.lastName, s.slackHandle, s.cohortId,
+                            c.cohortName
+                        FROM Student s
+                        JOIN Cohort c ON s.cohortId = c.Id
+                        WHERE s.Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    List<StudentExercise> assignedExercises = new List<StudentExercise>();
-                    while (reader.Read())
+                    Student Student = null;
+
+                    if (reader.Read())
                     {
-                        assignedExercises.Add(new StudentExercise
+                        Student = new Student
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            studentId = reader.GetInt32(reader.GetOrdinal("studentId")),
-                            exerciseId = reader.GetInt32(reader.GetOrdinal("exerciseId")),
-
-                        });
+                            Id = reader.GetInt32(reader.GetOrdinal("Student Id")),
+                            firstName = reader.GetString(reader.GetOrdinal("firstName")),
+                            lastName = reader.GetString(reader.GetOrdinal("lastName")),
+                            slackHandle = reader.GetString(reader.GetOrdinal("slackHandle")),
+                            cohortId = reader.GetInt32(reader.GetOrdinal("cohortId")),
+                            currentCohort = new Cohort
+                            {
+                                cohortName = reader.GetString(reader.GetOrdinal("cohortName"))
+                            }
+                        };
                     }
-
                     reader.Close();
 
-                    return assignedExercises;
+                    return Student;
                 }
             }
         }
 
+        public Student GetOneStudentWithExercises(int id)
+        {
+                Student student = GetOneStudent(id);   
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT e.Id, e.exerciseName, e.exerciseLanguage FROM Exercise e JOIN StudentExercise se ON e.Id=se.exerciseId WHERE se.studentId=@id";
+
+                        cmd.Parameters.Add(new SqlParameter("@id", student.Id));
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        while (reader.Read())
+                        {
+                            student.exerciseList.Add(new Exercise
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                exerciseName = reader.GetString(reader.GetOrdinal("Name")),
+                                exerciseLanguage = reader.GetString(reader.GetOrdinal("Language")),
+                            });
+                        }
+                        reader.Close();
+                    return student;
+                }
+                
+            }
+     }
+        
 
 
-        protected List<Cohort> GetAllCohorts()
+
+        public List<Cohort> GetAllCohorts()
         {
             using (SqlConnection conn = Connection)
             {

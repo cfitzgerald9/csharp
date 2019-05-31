@@ -187,7 +187,8 @@ namespace StudentExercisesMVC.Controllers
 
                     StudentEditViewModel viewModel = new StudentEditViewModel(_config.GetConnectionString("DefaultConnection"), id);
 
-                    viewModel.Student = thisStudent;
+                    viewModel.student = thisStudent;
+                   
 
                     return View(viewModel);
                 }
@@ -197,42 +198,53 @@ namespace StudentExercisesMVC.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, Student Student, Exercise Exercise)
+        public ActionResult Edit(StudentEditViewModel model, int id)
         {
-           
+
+            using (SqlConnection conne = Connection)
+            {
+                conne.Open();
+                using (SqlCommand cmd = conne.CreateCommand())
+                {
+                    model.student.exerciseList.ForEach(exerciseId =>
+                    {
+                        cmd.CommandText = @"INSERT INTO StudentExercise
+                                            (exerciseId, studentId) 
+                                            VALUES(exerciseId, @studentId)";
+                        cmd.Parameters.Add(new SqlParameter("@studentId", model.student.Id));
+                        cmd.Parameters.Add(new SqlParameter("@exerciseId", exerciseId));
+                        StudentExercise studentExercise = new StudentExercise();
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                    });
+                }
                 using (SqlConnection conn = Connection)
                 {
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"INSERT INTO StudentExercise
-                                            (exerciseId, studentId) 
-                                            VALUES(@exerciseId, @studentId)";
-                        cmd.Parameters.Add(new SqlParameter("@studentId", id));
-                        cmd.Parameters.Add(new SqlParameter("@exerciseId", Exercise.Id));
-                        StudentExercise studentExercise = new StudentExercise();
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                    }
-                }
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                    using (SqlCommand cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandText = @"UPDATE Student
+                        string command = @"UPDATE Student
                                             SET firstName = @firstName,
                                                 lastName = @lastName,
                                                 slackHandle = @slackHandle,
                                                 cohortId = @cohortId
-                                            WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@firstName", Student.firstName));
-                        cmd.Parameters.Add(new SqlParameter("@lastName", Student.lastName));
-                        cmd.Parameters.Add(new SqlParameter("@slackHandle", Student.slackHandle));
-                        cmd.Parameters.Add(new SqlParameter("@cohortId", Student.cohortId));
+                                                WHERE Id = @id
+                                                DELETE FROM StudentExercise WHERE studentId = @id";
+
+                        model.selectedExercises.ForEach(exerciseId =>
+                        {
+                            command += $" INSERT INTO StudentExercise (studentId, exerciseId) VALUES (@id, {exerciseId})";
+
+                        });
+                        cmd.CommandText = command;
+                        cmd.Parameters.Add(new SqlParameter("@firstName", model.student.firstName));
+                        cmd.Parameters.Add(new SqlParameter("@lastName", model.student.lastName));
+                        cmd.Parameters.Add(new SqlParameter("@slackHandle", model.student.slackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@cohortId", model.student.cohortId));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        Student = new Student();
 
+
+                       
                         int rowsAffected = cmd.ExecuteNonQuery();
 
                         if (rowsAffected > 0)
@@ -242,7 +254,8 @@ namespace StudentExercisesMVC.Controllers
                         throw new Exception("No rows affected");
                     }
                 }
-            
+
+            }
         }
 
 
