@@ -32,10 +32,12 @@ namespace StudentExercisesMVC.Models.ViewModels
         public StudentEditViewModel(string connectionString, int id)
         {
             _connectionString = connectionString;
+
             allExercises = GetAllExercises().Select(exercise => new SelectListItem()
             {
                 Text = exercise.exerciseName,
-                Value = exercise.Id.ToString()
+                Value = exercise.Id.ToString(),
+                Selected = student.exerciseList.Find(assignedExercise => assignedExercise.Id == exercise.Id) != null
             })
                 .ToList();
 
