@@ -1,0 +1,35 @@
+﻿@model StudentExercises_Entity.Models.Cohort
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+    <h1>Cohort @Html.DisplayFor(model => model.Name)</h1>
+
+
+<h4>Current students:</h4>
+<hr />
+@foreach (var student in Model.Students)
+{
+    <dl class="row">
+        <dt class="col-sm-2">Student Id</dt>
+        <dd class="col-sm-10"> @Html.DisplayFor(ModelItem => student.Id)</dd>
+        <dt class="col-sm-2">Student name</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(ModelItem => student.FirstName) @Html.DisplayFor(ModelItem => student.LastName)</dd>
+    </dl>
+}
+<h4>Current instructors:</h4>
+<hr />
+@foreach (var instructor in Model.Instructors)
+{
+<dl class="row">
+    <dt class="col-sm-2">Instructor Id</dt>
+    <dd class="col-sm-10"> @Html.DisplayFor(ModelItem => instructor.Id)</dd>
+    <dt class="col-sm-2">Instructor name</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(ModelItem => instructor.FirstName) @Html.DisplayFor(ModelItem => instructor.LastName)</dd>
+</dl>
+}
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
