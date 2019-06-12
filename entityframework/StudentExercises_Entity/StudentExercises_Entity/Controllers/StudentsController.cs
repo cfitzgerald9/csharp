@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using StudentExercises_Entity.Data;
 using StudentExercises_Entity.Models;
+using StudentExercises_Entity.Models.ViewModels;
 
 namespace StudentExercises_Entity.Controllers
 {
@@ -36,15 +37,15 @@ namespace StudentExercises_Entity.Controllers
 
             var student = await _context.Student
                 .Include(s => s.Cohort)
+                .Include(se => se.StudentExercises)
+                .ThenInclude(e => e.Exercise)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
                 return NotFound();
             }
-
             return View(student);
         }
-
         // GET: Students/Create
         public IActionResult Create()
         {
@@ -77,13 +78,30 @@ namespace StudentExercises_Entity.Controllers
                 return NotFound();
             }
 
-            var student = await _context.Student.FindAsync(id);
-            if (student == null)
+            var studentYes = await _context.Student.FindAsync(id);
+            if (studentYes == null)
             {
                 return NotFound();
             }
-            ViewData["CohortId"] = new SelectList(_context.Cohort, "Id", "Name", student.CohortId);
-            return View(student);
+
+            var cohorts = await _context.Cohort.ToListAsync();
+            var exercises = await _context.Exercise.ToListAsync();
+
+            var viewModel = new StudentEditViewModel()
+            {
+                student = studentYes,
+                CohortOptions = cohorts.Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                }).ToList(),
+                 ExerciseOptions = exercises.Select(c => new SelectListItem
+                 {
+                     Value = c.Id.ToString(),
+                     Text = c.Name
+                 }).ToList()
+            };
+            return View(viewModel);
         }
 
         // POST: Students/Edit/5
@@ -91,8 +109,10 @@ namespace StudentExercises_Entity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,SlackHandle,CohortId")] Student student)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,SlackHandle,CohortId")] StudentEditViewModel viewModel)
         {
+            var student = viewModel.student;
+
             if (id != student.Id)
             {
                 return NotFound();
@@ -118,8 +138,21 @@ namespace StudentExercises_Entity.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CohortId"] = new SelectList(_context.Cohort, "Id", "Name", student.CohortId);
-            return View(student);
+
+            var cohorts = await _context.Cohort.ToListAsync();
+            viewModel.CohortOptions = cohorts.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            }).ToList();
+            var exercises = await _context.Exercise.ToListAsync();
+            viewModel.ExerciseOptions = cohorts.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            }).ToList();
+
+            return View(viewModel);
         }
 
         // GET: Students/Delete/5

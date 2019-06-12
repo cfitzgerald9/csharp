@@ -1,4 +1,4 @@
-﻿@model StudentExercises_Entity.Models.Student
+﻿@model StudentExercises_Entity.Models.ViewModels.StudentEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -12,26 +12,33 @@
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="student.Id" />
             <div class="form-group">
-                <label asp-for="FirstName" class="control-label"></label>
-                <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
+                <label asp-for="student.FirstName" class="control-label"></label>
+                <input asp-for="student.FirstName" class="form-control" />
+                <span asp-validation-for="student.FirstName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="LastName" class="control-label"></label>
-                <input asp-for="LastName" class="form-control" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
+                <label asp-for="student.LastName" class="control-label"></label>
+                <input asp-for="student.LastName" class="form-control" />
+                <span asp-validation-for="student.LastName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="SlackHandle" class="control-label"></label>
-                <input asp-for="SlackHandle" class="form-control" />
-                <span asp-validation-for="SlackHandle" class="text-danger"></span>
+                <label asp-for="student.SlackHandle" class="control-label"></label>
+                <input asp-for="student.SlackHandle" class="form-control" />
+                <span asp-validation-for="student.SlackHandle" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CohortId" class="control-label"></label>
-                <select asp-for="CohortId" class="form-control" asp-items="ViewBag.CohortId"></select>
-                <span asp-validation-for="CohortId" class="text-danger"></span>
+                <label asp-for="student.CohortId" class="control-label"></label>
+                <select asp-for="student.CohortId" class="form-control"
+                        asp-items="@Model.CohortOptions"></select>
+                <span asp-validation-for="student.CohortId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="student.StudentExercises" class="control-label"></label>
+                <select asp-for="student.StudentExercises" class="form-control"
+                        asp-items="@Model.ExerciseOptions"></select>
+                <span asp-validation-for="student.StudentExercises" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
