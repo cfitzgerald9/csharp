@@ -2,81 +2,82 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using IdentityV2.Data;
-using IdentityV2.Models;
-using Microsoft.AspNetCore.Identity;
+using TravelPlanner.Data;
+using TravelPlanner.Models;
 
-namespace IdentityV2.Controllers
+namespace TravelPlanner.Controllers
 {
-    public class ListItemsController : Controller
+    public class ClientsController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        public ListItemsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
-        {
-            _context = context;
-            _userManager = userManager;
-        }
+        private readonly ApplicationDbContext _context;
         private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+        public ClientsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        {
+            _userManager = userManager;
+            _context = context;
+        }
 
-        // GET: ListItems
+        // GET: Clients
         public async Task<IActionResult> Index()
         {
             var user = await GetCurrentUserAsync();
-            var applicationDbContext = _context.ListItem
-                .Include(l => l.Id)
-                .Where(l => l.UserId == user.Id);
+            var applicationDbContext = _context.Client
+                .Include(l => l.User)
+                .Where(l => l.ApplicationUserId == user.Id);
             return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: ListItems/Details/5
+        // GET: Clients/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
-            var listItem = await _context.ListItem
-                .Include(l => l.User)
+            var trips = await _context.Trip.Where(t => t.ClientId == id).ToListAsync();
+            var client = await _context.Client
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (listItem == null)
+            client.Trips = trips;
+
+
+            if (client == null)
             {
                 return NotFound();
             }
 
-            return View(listItem);
+            return View(client);
         }
 
-        // GET: ListItems/Create
+        // GET: Clients/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
-        // POST: ListItems/Create
+        // POST: Clients/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] ListItem listItem)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,PhoneNumber")] Client client)
         {
             var currentUser = await GetCurrentUserAsync();
             if (ModelState.IsValid)
             {
-                listItem.UserId = currentUser.Id;
-                _context.Add(listItem);
+                client.ApplicationUserId = currentUser.Id;
+                _context.Add(client);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(listItem);
+            return View(client);
         }
 
-        // GET: ListItems/Edit/5
+        // GET: Clients/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,24 +85,22 @@ namespace IdentityV2.Controllers
                 return NotFound();
             }
 
-            var listItem = await _context.ListItem.FindAsync(id);
-            if (listItem == null)
+            var client = await _context.Client.FindAsync(id);
+            if (client == null)
             {
                 return NotFound();
             }
-          
-            return View(listItem);
+            return View(client);
         }
 
-        // POST: ListItems/Edit/5
+        // POST: Clients/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] ListItem listItem)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,PhoneNumber,ApplicationUserId")] Client client)
         {
-            var currentUser = await GetCurrentUserAsync();
-            if (id != listItem.Id)
+            if (id != client.Id)
             {
                 return NotFound();
             }
@@ -110,13 +109,12 @@ namespace IdentityV2.Controllers
             {
                 try
                 {
-                    listItem.UserId = currentUser.Id;
-                    _context.Update(listItem);
+                    _context.Update(client);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ListItemExists(listItem.Id))
+                    if (!ClientExists(client.Id))
                     {
                         return NotFound();
                     }
@@ -127,10 +125,10 @@ namespace IdentityV2.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(listItem);
+            return View(client);
         }
 
-        // GET: ListItems/Delete/5
+        // GET: Clients/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -138,31 +136,30 @@ namespace IdentityV2.Controllers
                 return NotFound();
             }
 
-            var listItem = await _context.ListItem
-                .Include(l => l.User)
+            var client = await _context.Client
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (listItem == null)
+            if (client == null)
             {
                 return NotFound();
             }
 
-            return View(listItem);
+            return View(client);
         }
 
-        // POST: ListItems/Delete/5
+        // POST: Clients/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var listItem = await _context.ListItem.FindAsync(id);
-            _context.ListItem.Remove(listItem);
+            var client = await _context.Client.FindAsync(id);
+            _context.Client.Remove(client);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ListItemExists(int id)
+        private bool ClientExists(int id)
         {
-            return _context.ListItem.Any(e => e.Id == id);
+            return _context.Client.Any(e => e.Id == id);
         }
     }
 }

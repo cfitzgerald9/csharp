@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using IdentityV2.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using TravelPlanner.Models;
 
-namespace IdentityV2.Data
+namespace TravelPlanner.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
@@ -13,7 +13,8 @@ namespace IdentityV2.Data
             : base(options)
         {
         }
-        public DbSet<ListItem> ListItem { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<TravelPlanner.Models.Client> Client { get; set; }
+        public DbSet<TravelPlanner.Models.Trip> Trip { get; set; }
     }
 }

@@ -1,0 +1,51 @@
+﻿@model TravelPlanner.Models.Client
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Client</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.LastName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.LastName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PhoneNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PhoneNumber)
+        </dd>
+    </dl>
+</div>
+<h4>Trips:</h4>
+@if(Model.Trips.Count > 0) { 
+@foreach (var trip in Model.Trips){
+<dl class="row">
+    <dt class="col-sm-2">@Html.DisplayNameFor(ModelItem => trip.Location)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(ModelItem => trip.Location)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(ModelItem => trip.StartDate)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(ModelItem => trip.StartDate)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(ModelItem => trip.EndDate)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(ModelItem => trip.EndDate)</dd>
+</dl>
+    }
+        }else { 
+    <p>No trips yet! Get selling!</p>
+}
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

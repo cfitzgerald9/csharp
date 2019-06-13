@@ -10,12 +10,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IdentityV2.Data;
+using TravelPlanner.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using IdentityV2.Models;
+using TravelPlanner.Models;
 
-namespace IdentityV2
+namespace TravelPlanner
 {
     public class Startup
     {
