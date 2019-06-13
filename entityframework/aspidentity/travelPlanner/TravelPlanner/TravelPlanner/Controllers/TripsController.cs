@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -25,17 +26,26 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Trips
-        public async Task<IActionResult> Index()
+        [Authorize]
+        public async Task<IActionResult> Index(string searchString)
         {
-
             var user = await GetCurrentUserAsync();
-            var trips = _context.Trip
-                .Include(t => t.Client)
-                .Where(t => user == t.User && t.StartDate > DateTime.Now)
-                .OrderBy(t => t.StartDate);
-            return View(await trips.ToListAsync());
+            if (searchString != null)
+            {
+                var trips = _context.Trip
+                    .Include(t => t.Client)
+                    .Where(t => user == t.User && t.StartDate > DateTime.Now && t.Location.Contains(searchString))
+                    .OrderBy(t => t.StartDate);
+                    return View(await trips.ToListAsync());
+            } else {
+                var trips = _context.Trip
+                  .Include(t => t.Client)
+                  .Where(t => user == t.User && t.StartDate > DateTime.Now)
+                  .OrderBy(t => t.StartDate);
+                return View(await trips.ToListAsync());
+            }
         }
-
+        [Authorize]
         public async Task<IActionResult> List()
         {
                 var user = await GetCurrentUserAsync();
@@ -47,6 +57,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Trips/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -65,6 +76,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Trips/Create
+        [Authorize]
         public async Task<IActionResult> Create()
         {
             var user = await GetCurrentUserAsync();
@@ -85,6 +97,7 @@ namespace TravelPlanner.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,StartDate,EndDate,Location,ClientId")] Trip trip)
         {
@@ -100,6 +113,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Trips/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -119,6 +133,7 @@ namespace TravelPlanner.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,StartDate,EndDate,Location,ClientId")] Trip trip)
         {
@@ -151,6 +166,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Trips/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -170,6 +186,7 @@ namespace TravelPlanner.Controllers
 
         // POST: Trips/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {

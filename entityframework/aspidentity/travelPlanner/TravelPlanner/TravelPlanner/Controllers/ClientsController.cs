@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,16 +24,29 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Clients
-        public async Task<IActionResult> Index()
+        [Authorize]
+        public async Task<IActionResult> Index(string searchString)
         {
+            
             var user = await GetCurrentUserAsync();
-            var applicationDbContext = _context.Client
+            if (searchString != null)
+            {
+                var clients = _context.Client
+                .Include(l => l.User)
+                .Where(l => l.ApplicationUserId == user.Id && l.FirstName.Contains(searchString) || l.LastName.Contains(searchString));
+                return View(await clients.ToListAsync());
+            }
+            else
+            {
+                var clients = _context.Client
                 .Include(l => l.User)
                 .Where(l => l.ApplicationUserId == user.Id);
-            return View(await applicationDbContext.ToListAsync());
+                return View(await clients.ToListAsync());
+            };
         }
 
         // GET: Clients/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -54,6 +68,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Clients/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -63,6 +78,7 @@ namespace TravelPlanner.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,PhoneNumber")] Client client)
         {
@@ -78,6 +94,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Clients/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -97,6 +114,7 @@ namespace TravelPlanner.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,PhoneNumber,ApplicationUserId")] Client client)
         {
@@ -129,6 +147,7 @@ namespace TravelPlanner.Controllers
         }
 
         // GET: Clients/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -148,6 +167,7 @@ namespace TravelPlanner.Controllers
 
         // POST: Clients/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
