@@ -49,12 +49,15 @@ namespace TravelPlanner.Controllers
         [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
+            var user = await GetCurrentUserAsync();
             if (id == null)
             {
                 return NotFound();
             }
+            
             var trips = await _context.Trip.Where(t => t.ClientId == id).ToListAsync();
             var client = await _context.Client
+                .Where(t => t.ApplicationUserId == user.Id)
                 .FirstOrDefaultAsync(m => m.Id == id);
             client.Trips = trips;
 

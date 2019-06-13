@@ -99,17 +99,29 @@ namespace TravelPlanner.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,StartDate,EndDate,Location,ClientId")] Trip trip)
+        public async Task<IActionResult> Create(CreateTripViewModel tripModel)
         {
             var user = await GetCurrentUserAsync();
             if (ModelState.IsValid)
             {
-                trip.User = user;
-                _context.Add(trip);
+                _context.Add(tripModel); 
+                tripModel.user = user;
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(trip);
+            else
+            {
+                List<Client> clients = await _context.Client.ToListAsync();
+                var viewModel = new CreateTripViewModel()
+                {
+                    ClientOptions = clients.Where(c => c.ApplicationUserId == user.Id).Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.FullName
+                    }).ToList()
+                };
+                return View(viewModel);
+            }
         }
 
         // GET: Trips/Edit/5
