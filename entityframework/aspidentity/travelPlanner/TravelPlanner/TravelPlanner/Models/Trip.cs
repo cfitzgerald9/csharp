@@ -24,6 +24,19 @@ namespace TravelPlanner.Models
                     $"End date must be later than start date.",
                     new[] { "EndDate" });
             }
+            if ((EndDate.Year > 2025))
+            {
+                yield return new ValidationResult(
+                    $"End date cannot be after 2025",
+                    new[] { "EndDate" });
+            }
+            if ((StartDate < DateTime.Now))
+            {
+                yield return new ValidationResult(
+                    $"Start date must be later than current date.",
+                    new[] { "StartDate" });
+            }
         }
     }
+
 }

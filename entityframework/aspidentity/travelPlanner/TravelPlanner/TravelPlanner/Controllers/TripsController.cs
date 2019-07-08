@@ -147,7 +147,7 @@ namespace TravelPlanner.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,StartDate,EndDate,Location,ClientId")] Trip trip)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,StartDate,EndDate,Location, ClientId")] Trip trip)
         {
             if (id != trip.Id)
             {
@@ -158,6 +158,7 @@ namespace TravelPlanner.Controllers
             {
                 try
                 {
+                   
                     _context.Update(trip);
                     await _context.SaveChangesAsync();
                 }

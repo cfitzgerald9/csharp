@@ -14,7 +14,7 @@ namespace TravelPlanner.Data
         {
         }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-        public DbSet<TravelPlanner.Models.Client> Client { get; set; }
-        public DbSet<TravelPlanner.Models.Trip> Trip { get; set; }
+        public DbSet<Client> Client { get; set; }
+        public DbSet<Trip> Trip { get; set; }
     }
 }
